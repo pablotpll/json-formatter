@@ -1,0 +1,65 @@
+{
+  "version": "1.0",
+  "workflow": {
+    "Load Checkpoint": {
+      "class": "Load SDXL Checkpoint",
+      "inputs": {
+        "ckpt_name": "sd_xl_base_1.0.safetensors"
+      }
+    },
+    "Positive Prompt": {
+      "class": "CLIPTextEncodeSDXL",
+      "inputs": {
+        "clip": ["Load Checkpoint", 1],
+        "text_g": "a beautiful cinematic shot of a woman walking in a futuristic city, dramatic lighting",
+        "text_l": "cinematic, future, neon, 4k"
+      }
+    },
+    "Negative Prompt": {
+      "class": "CLIPTextEncodeSDXL",
+      "inputs": {
+        "clip": ["Load Checkpoint", 1],
+        "text_g": "low quality, blurry, bad anatomy",
+        "text_l": ""
+      }
+    },
+    "Combine Conditioning": {
+      "class": "CombineConditioningSDXL",
+      "inputs": {
+        "positive": ["Positive Prompt", 0],
+        "negative": ["Negative Prompt", 0]
+      }
+    },
+    "KSampler": {
+      "class": "KSampler",
+      "inputs": {
+        "model": ["Load Checkpoint", 0],
+        "positive": ["Combine Conditioning", 0],
+        "negative": ["Combine Conditioning", 1],
+        "sampler_name": "euler",
+        "scheduler": "normal",
+        "steps": 25,
+        "cfg": 7,
+        "seed": 1234,
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 8
+      }
+    },
+    "VAE Decode": {
+      "class": "VAEDecode",
+      "inputs": {
+        "samples": ["KSampler", 0],
+        "vae": ["Load Checkpoint", 2]
+      }
+    },
+    "Save Animated WebP": {
+      "class": "SaveAnimatedWEBP",
+      "inputs": {
+        "images": ["VAE Decode", 0],
+        "filename_prefix": "sdxl_video_output",
+        "fps": 10
+      }
+    }
+  }
+}
